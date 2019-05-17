@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <odoo>
-    <template id="partner" name="Customers">
+    <template id="partner" name="Partner">
         <t t-call="website.layout">
             <div id="wrap">
                 <div class="oe_structure"/>
