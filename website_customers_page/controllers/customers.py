@@ -19,7 +19,11 @@ class MainCustomers(http.Controller):
         '/customers/country/<int:country_id>/page/<int:page>',
         '/customers/country/<country_name>-<int:country_id>/page/<int:page>',
     ], type='http', auth="public", website=True)
-    def customers(self, country_name=None, country_id=0, page=1, **post):
+    def main_post(self, country_name=None, country_id=0, page=1, **post):
+        values = self.default_post(country_name, country_id, page, **post)
+        return request.render("website_customers_page.customers", values)
+
+    def default_post(self, country_name=None, country_id=0, page=1, **post):
         # from wdb import set_trace
         # set_trace()
         limit = self._references_per_page
@@ -45,12 +49,12 @@ class MainCustomers(http.Controller):
         if country_id:
             line_domain += [('country_id', '=', country_id)]
             current_country = Country.browse(country_id).read(['id', 'name'])[0]
-        
+
         countries.insert(0, {
             'country_id_count': countries_total,
             'country_id': (0, _("All Countries"))
         })
-        
+
         partners = Partner.sudo().search(line_domain, offset, limit)
         count_partners = Partner.sudo().search_count(line_domain)
 
@@ -71,9 +75,7 @@ class MainCustomers(http.Controller):
             'pager': pager,
             'search': "?%s" % werkzeug.url_encode(post),
         }
-        # from wdb import set_trace
-        # set_trace()
-        return request.render("website_customers_page.customers", values)
+        return values
 
     @http.route(['/customers/<partner_id>'],
                 type='http', auth="public", website=True)
