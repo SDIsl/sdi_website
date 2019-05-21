@@ -19,15 +19,28 @@ class MainCustomers(http.Controller):
         '/customers/country/<int:country_id>/page/<int:page>',
         '/customers/country/<country_name>-<int:country_id>/page/<int:page>',
     ], type='http', auth="public", website=True)
-    def main_post(self, country_name=None, country_id=0, page=1, **post):
+    def main(self, country_name=None, country_id=0, page=1, **post):
         values = self.default_post(country_name, country_id, page, **post)
+        limit = self._references_per_page
+        Partner = request.env['res.partner']
+        offset = limit * (page - 1)
+
+        partners = Partner.sudo().search(values['line_domain'], offset, limit)
+        count_partners = Partner.sudo().search_count(values['line_domain'])
+
+        base_url = '/customers'
+        pager = request.website.pager(
+                                    url=base_url,
+                                    total=count_partners,
+                                    page=page,
+                                    step=limit,
+                                    scope=7,
+                                    url_args=post)
+        values['partners'] = partners
+        values['pager'] = pager
         return request.render("website_customers_page.customers", values)
 
     def default_post(self, country_name=None, country_id=0, page=1, **post):
-        # from wdb import set_trace
-        # set_trace()
-        limit = self._references_per_page
-        offset = limit * (page - 1)
         Partner = request.env['res.partner']
         Country = request.env['res.country']
         post_name = post.get('search') or post.get('name', '')
@@ -55,25 +68,13 @@ class MainCustomers(http.Controller):
             'country_id': (0, _("All Countries"))
         })
 
-        partners = Partner.sudo().search(line_domain, offset, limit)
-        count_partners = Partner.sudo().search_count(line_domain)
-
-        base_url = '/customers'
-        pager = request.website.pager(
-                                    url=base_url,
-                                    total=count_partners,
-                                    page=page,
-                                    step=limit,
-                                    scope=7,
-                                    url_args=post)
         values = {
-            'partners': partners,
             'countries': countries,
             'current_country': current_country and [current_country['id'], current_country['name']] or None,
             'current_country_id': current_country and current_country['id'] or 0,
             'post': post,
-            'pager': pager,
             'search': "?%s" % werkzeug.url_encode(post),
+            'line_domain': line_domain
         }
         return values
 
