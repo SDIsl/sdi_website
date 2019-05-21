@@ -1,0 +1,12 @@
+div#wrapwrap header div.navbar-default.navbar-static-top{
+    background-color:unset;
+    border: 0px;
+}
+div#wrapwrap div.navbar-default.navbar-static-top a.navbar-brand.logo{
+    display:none;
+}
+div#wrapwrap ul#top_menu a{
+    color:#AEA79F;
+}
+
+
