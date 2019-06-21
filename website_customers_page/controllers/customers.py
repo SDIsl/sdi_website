@@ -40,15 +40,20 @@ class MainCustomers(http.Controller):
         values['pager'] = pager
         return request.render("website_customers_page.customers", values)
 
+    def default_search(self, line_domain=[], **post):
+        post_name = post.get('search')
+        if post_name:
+            line_domain += [('name', 'ilike', post_name)]
+        return line_domain
+
     def default_post(self, country_name=None, country_id=0, page=1, **post):
         Partner = request.env['res.partner']
         Country = request.env['res.country']
-        post_name = post.get('search') or post.get('name', '')
+
         base_partner_domain = self.get_domain()
         current_country = None
         line_domain = base_partner_domain
-        if post_name:
-            line_domain += [('name', 'ilike', post_name)]
+        line_domain = self.default_search(line_domain, **post)
 
         # group by country, based on all customers (base domain)
         countries = Partner.sudo().read_group(
